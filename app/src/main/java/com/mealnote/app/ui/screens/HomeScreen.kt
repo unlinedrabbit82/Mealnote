@@ -1,26 +1,22 @@
 package com.mealnote.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.mealnote.app.ui.viewmodels.MealViewModel
 import com.mealnote.app.ui.viewmodels.WaterViewModel
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import android.graphics.BitmapFactory
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.layout.ContentScale
-
 import java.io.File
 
 @Composable
@@ -35,11 +31,13 @@ fun HomeScreen(
     val todayTotal by waterViewModel.todayTotal.collectAsState()
     val dailyGoal by waterViewModel.dailyGoal.collectAsState()
     val todaysMeals by mealViewModel.todaysMeals.collectAsState()
+    val allMeals by mealViewModel.meals.collectAsState()
 
     // Debug logging
     LaunchedEffect(todayTotal, dailyGoal, todaysMeals) {
         android.util.Log.d("HomeScreen", "Water: $todayTotal / $dailyGoal ml")
         android.util.Log.d("HomeScreen", "Today's meals: ${todaysMeals.size}")
+        android.util.Log.d("HomeScreen", "Total meals: ${allMeals.size}")
     }
 
     Column(
@@ -134,7 +132,7 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // In HomeScreen, update the meals display section:
+                // Show meals (up to 3)
                 if (todaysMeals.isEmpty()) {
                     Text(
                         "No meals logged today. Tap + Add Meal",
@@ -150,12 +148,20 @@ fun HomeScreen(
                             }
                         )
                     }
+                }
 
-                    if (todaysMeals.size > 3) {
-                        TextButton(onClick = onNavigateToAllMeals) {
-                            Text("View ${todaysMeals.size - 3} more...")
-                        }
-                    }
+                // ===== ALWAYS SHOW "VIEW ALL" BUTTON =====
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = onNavigateToAllMeals,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text("📋 View All Meals (${allMeals.size} total)")
                 }
             }
         }
@@ -189,7 +195,6 @@ fun HomeScreen(
     }
 }
 
-
 @Composable
 fun MealListItem(
     meal: com.mealnote.app.ui.viewmodels.Meal,
@@ -208,7 +213,7 @@ fun MealListItem(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ✅ Using AsyncImage for efficient loading
+            // Image display using AsyncImage
             if (meal.photoPath != null) {
                 AsyncImage(
                     model = File(meal.photoPath),
@@ -264,19 +269,5 @@ fun MealListItem(
                 Text("🗑️", fontSize = 16.sp)
             }
         }
-    }
-}
-// Helper function to load image from path
-fun loadImageFromPath(path: String): android.graphics.Bitmap? {
-    return try {
-        val file = java.io.File(path)
-        if (file.exists()) {
-            android.graphics.BitmapFactory.decodeFile(path)
-        } else {
-            null
-        }
-    } catch (e: Exception) {
-        android.util.Log.e("MealListItem", "Error loading image: ${e.message}")
-        null
     }
 }
