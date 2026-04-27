@@ -1,83 +1,205 @@
 package com.mealnote.app.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mealnote.app.ui.viewmodels.MealViewModel
+import com.mealnote.app.ui.viewmodels.WaterViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    waterViewModel: WaterViewModel,  // ← Parameter (no default)
+    mealViewModel: MealViewModel     // ← Parameter (no default)
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                top = 60.dp,      // ← Add this to push content down
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 16.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "📊 Statistics",
-            style = MaterialTheme.typography.headlineLarge
-        )
+    val todayTotal by waterViewModel.todayTotal.collectAsState()
+    val dailyGoal by waterViewModel.dailyGoal.collectAsState()
+    val allMeals by mealViewModel.meals.collectAsState()
 
-        Spacer(modifier = Modifier.height(32.dp))
+    // Calculate statistics
+    val totalMeals = allMeals.size
+    val avgCaloriesPerMeal = if (totalMeals > 0) {
+        allMeals.mapNotNull { it.calories }.average().toInt()
+    } else 0
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
+    // Group meals by type
+    val breakfastCount = allMeals.count { it.mealTime == "Breakfast" }
+    val lunchCount = allMeals.count { it.mealTime == "Lunch" }
+    val dinnerCount = allMeals.count { it.mealTime == "Dinner" }
+    val snackCount = allMeals.count { it.mealTime == "Snack" }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Statistics") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateToHome) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Text(
+                text = "📊 Your Statistics",
+                style = MaterialTheme.typography.headlineLarge
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Water Statistics Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Text("Weekly Water Intake", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Chart coming soon...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("💧 Water Intake", style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Today's Water:")
+                        Text("$todayTotal / $dailyGoal ml", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    val percentage = (todayTotal.toFloat() / dailyGoal * 100).toInt()
+                    Text(
+                        "Achieved: $percentage% of daily goal",
+                        color = if (percentage >= 100) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Meal Statistics Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("🍽️ Meal Summary", style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Total Meals Logged:")
+                        Text("$totalMeals", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    }
+
+                    if (avgCaloriesPerMeal > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Average Calories:")
+                            Text("$avgCaloriesPerMeal cal", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        }
+                    }
+
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    Text("Meal Distribution:", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    MealDistributionRow("🌅 Breakfast", breakfastCount, totalMeals)
+                    MealDistributionRow("☀️ Lunch", lunchCount, totalMeals)
+                    MealDistributionRow("🌙 Dinner", dinnerCount, totalMeals)
+                    MealDistributionRow("🍎 Snack", snackCount, totalMeals)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Achievement Badge
+            if (todayTotal >= dailyGoal && totalMeals >= 3) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("🏆 Great job! You've met your daily goals! 🎉")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Navigation Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onNavigateToHome,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("🏠 Home")
+                }
+                Button(
+                    onClick = onNavigateToSettings,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("⚙️ Settings")
+                }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(16.dp))
+@Composable
+fun MealDistributionRow(
+    mealType: String,
+    count: Int,
+    total: Int
+) {
+    val percentage = if (total > 0) (count.toFloat() / total * 100).toInt() else 0
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Weekly Meal Count", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Chart coming soon...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                onClick = onNavigateToHome,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("🏠 Home")
-            }
-            Button(
-                onClick = onNavigateToSettings,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("⚙️ Settings")
-            }
+            Text(mealType)
+            Text("$count meals ($percentage%)", fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        LinearProgressIndicator(
+            progress = (count.toFloat() / total).coerceIn(0f, 1f),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

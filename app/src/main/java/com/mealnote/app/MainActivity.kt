@@ -86,7 +86,9 @@ fun MealNoteApp(
         composable("stats") {
             StatisticsScreen(
                 onNavigateToHome = { navController.popBackStack() },
-                onNavigateToSettings = { navController.navigate("settings") }
+                onNavigateToSettings = { navController.navigate("settings") },
+                waterViewModel = waterViewModel,  // ← Pass WaterViewModel
+                mealViewModel = mealViewModel      // ← Pass MealViewModel
             )
         }
         composable("add_meal") {
