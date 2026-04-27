@@ -1,7 +1,7 @@
 package com.mealnote.app.ui.viewmodels
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateListOf
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -10,19 +10,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 data class Meal(
     val id: Int = 0,
     val name: String,
     val mealTime: String,
     val calories: Int? = null,
+    val protein: Int? = null,      // ← NEW: Protein in grams
+    val carbs: Int? = null,        // ← NEW: Carbs in grams
+    val fat: Int? = null,          // ← NEW: Fat in grams
     val photoPath: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 )
 
 class MealViewModel : ViewModel() {
 
-    // Make context nullable and initialize later
     private var _context: Context? = null
 
     fun init(context: Context) {
@@ -39,6 +42,9 @@ class MealViewModel : ViewModel() {
     private val _todaysMeals = MutableStateFlow<List<Meal>>(emptyList())
     val todaysMeals: StateFlow<List<Meal>> = _todaysMeals.asStateFlow()
 
+    private val _recentMeals = MutableStateFlow<List<Meal>>(emptyList())
+    val recentMeals: StateFlow<List<Meal>> = _recentMeals.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -47,9 +53,10 @@ class MealViewModel : ViewModel() {
             _isLoading.value = true
             val newId = (_meals.value.maxOfOrNull { it.id } ?: 0) + 1
             val newMeal = meal.copy(id = newId)
-            val newMeals = _meals.value + newMeal
+            val newMeals = listOf(newMeal) + _meals.value
             _meals.value = newMeals
             updateTodaysMeals()
+            updateRecentMeals()
             saveMeals(newMeals)
             _isLoading.value = false
         }
@@ -59,6 +66,7 @@ class MealViewModel : ViewModel() {
         val newMeals = _meals.value.filter { it.id != mealId }
         _meals.value = newMeals
         updateTodaysMeals()
+        updateRecentMeals()
         saveMeals(newMeals)
     }
 
@@ -69,10 +77,13 @@ class MealViewModel : ViewModel() {
         }
     }
 
+    private fun updateRecentMeals() {
+        _recentMeals.value = _meals.value.take(10)
+    }
+
     private fun saveMeals(meals: List<Meal>) {
         val json = gson.toJson(meals)
         prefs?.edit()?.putString("saved_meals", json)?.apply()
-        android.util.Log.d("MealVM", "Saved ${meals.size} meals")
     }
 
     private fun loadSavedMeals() {
@@ -80,35 +91,38 @@ class MealViewModel : ViewModel() {
         if (json != null) {
             val type = object : TypeToken<List<Meal>>() {}.type
             val loadedMeals: List<Meal> = gson.fromJson(json, type)
-            _meals.value = loadedMeals
+            _meals.value = loadedMeals.sortedByDescending { it.timestamp }
             updateTodaysMeals()
-            android.util.Log.d("MealVM", "Loaded ${loadedMeals.size} meals")
+            updateRecentMeals()
+        } else {
+            loadSampleMeals()
         }
     }
 
     private fun loadSampleMeals() {
         _meals.value = listOf(
-            Meal(id = 1, name = "Avocado Toast", mealTime = "Breakfast", calories = 350),
-            Meal(id = 2, name = "Chicken Salad", mealTime = "Lunch", calories = 450),
-            Meal(id = 3, name = "Pasta", mealTime = "Dinner", calories = 600)
+            Meal(id = 1, name = "Avocado Toast", mealTime = "Breakfast", calories = 350, protein = 12, carbs = 35, fat = 18),
+            Meal(id = 2, name = "Chicken Salad", mealTime = "Lunch", calories = 450, protein = 35, carbs = 20, fat = 22),
+            Meal(id = 3, name = "Pasta", mealTime = "Dinner", calories = 600, protein = 20, carbs = 80, fat = 15)
         )
         updateTodaysMeals()
+        updateRecentMeals()
         saveMeals(_meals.value)
     }
 
     private fun getTodayTimestamp(): Long {
-        val calendar = java.util.Calendar.getInstance()
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-        calendar.set(java.util.Calendar.MINUTE, 0)
-        calendar.set(java.util.Calendar.SECOND, 0)
-        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
     }
 
     private fun isSameDay(timestamp1: Long, timestamp2: Long): Boolean {
-        val cal1 = java.util.Calendar.getInstance().apply { timeInMillis = timestamp1 }
-        val cal2 = java.util.Calendar.getInstance().apply { timeInMillis = timestamp2 }
-        return cal1.get(java.util.Calendar.YEAR) == cal2.get(java.util.Calendar.YEAR) &&
-                cal1.get(java.util.Calendar.DAY_OF_YEAR) == cal2.get(java.util.Calendar.DAY_OF_YEAR)
+        val cal1 = Calendar.getInstance().apply { timeInMillis = timestamp1 }
+        val cal2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 }

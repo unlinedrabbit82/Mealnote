@@ -39,6 +39,9 @@ fun AddMealScreen(
     var mealName by remember { mutableStateOf("") }
     var selectedMealTime by remember { mutableStateOf("Lunch") }
     var calories by remember { mutableStateOf("") }
+    var protein by remember { mutableStateOf("") }
+    var carbs by remember { mutableStateOf("") }
+    var fat by remember { mutableStateOf("") }
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var savedPhotoPath by remember { mutableStateOf<String?>(null) }
     var showError by remember { mutableStateOf(false) }
@@ -68,12 +71,11 @@ fun AddMealScreen(
         }
     }
 
-    // ===== FIXED: Camera launcher with permanent storage =====
+    // Camera launcher with permanent storage
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            // Load the temp photo and save it permanently
             tempPhotoFile?.let { file ->
                 if (file.exists()) {
                     val bitmap = BitmapFactory.decodeFile(file.absolutePath)
@@ -82,7 +84,6 @@ fun AddMealScreen(
                         savedPhotoPath = saveBitmapToFile(it)
                         android.util.Log.d("AddMeal", "Camera photo saved to: $savedPhotoPath")
                     }
-                    // Delete the temp file
                     file.delete()
                 }
             }
@@ -173,6 +174,50 @@ fun AddMealScreen(
                 )
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ===== MACROS SECTION =====
+            Text("Macros (Optional)", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = protein,
+                    onValueChange = { protein = it },
+                    label = { Text("Protein (g)") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+
+                OutlinedTextField(
+                    value = carbs,
+                    onValueChange = { carbs = it },
+                    label = { Text("Carbs (g)") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+
+                OutlinedTextField(
+                    value = fat,
+                    onValueChange = { fat = it },
+                    label = { Text("Fat (g)") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Photo Section
@@ -260,6 +305,9 @@ fun AddMealScreen(
                             name = mealName,
                             mealTime = selectedMealTime,
                             calories = calories.toIntOrNull(),
+                            protein = protein.toIntOrNull(),
+                            carbs = carbs.toIntOrNull(),
+                            fat = fat.toIntOrNull(),
                             photoPath = savedPhotoPath,
                             timestamp = System.currentTimeMillis()
                         )

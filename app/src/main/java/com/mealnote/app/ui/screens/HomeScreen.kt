@@ -213,7 +213,7 @@ fun MealListItem(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image display using AsyncImage
+            // Image display
             if (meal.photoPath != null) {
                 AsyncImage(
                     model = File(meal.photoPath),
@@ -224,7 +224,6 @@ fun MealListItem(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // Placeholder when no image
                 Box(
                     modifier = Modifier
                         .size(50.dp)
@@ -237,7 +236,7 @@ fun MealListItem(
             }
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Meal details
+            // Meal details with macros
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -246,11 +245,23 @@ fun MealListItem(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )
+
+                // Calories line
                 Text(
                     text = "${meal.mealTime} • ${meal.calories?.toString() ?: "No"} cal",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                // Macros line (if any macros exist)
+                if (meal.protein != null || meal.carbs != null || meal.fat != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = buildMacrosString(meal),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             // Time
@@ -270,4 +281,13 @@ fun MealListItem(
             }
         }
     }
+}
+
+// Helper function to format macros string
+fun buildMacrosString(meal: com.mealnote.app.ui.viewmodels.Meal): String {
+    val parts = mutableListOf<String>()
+    meal.protein?.let { parts.add("P:${it}g") }
+    meal.carbs?.let { parts.add("C:${it}g") }
+    meal.fat?.let { parts.add("F:${it}g") }
+    return parts.joinToString(" • ")
 }
