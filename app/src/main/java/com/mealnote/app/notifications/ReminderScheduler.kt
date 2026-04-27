@@ -25,7 +25,7 @@ class ReminderScheduler(private val context: Context) {
                     .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
                     .build()
             )
-            .setInitialDelay(1, TimeUnit.HOURS)
+            .setInitialDelay(4, TimeUnit.HOURS)
             .setInputData(
                 workDataOf(
                     "type" to "water",
