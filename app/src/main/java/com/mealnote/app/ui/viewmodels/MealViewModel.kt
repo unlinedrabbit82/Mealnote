@@ -17,9 +17,11 @@ data class Meal(
     val name: String,
     val mealTime: String,
     val calories: Int? = null,
-    val protein: Int? = null,      // ← NEW: Protein in grams
-    val carbs: Int? = null,        // ← NEW: Carbs in grams
-    val fat: Int? = null,          // ← NEW: Fat in grams
+    val protein: Int? = null,
+    val carbs: Int? = null,
+    val fat: Int? = null,
+    val sodium: Int? = null,    // ← NEW: Sodium in mg
+    val fiber: Int? = null,     // ← NEW: Fiber in grams
     val photoPath: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 )
@@ -101,9 +103,9 @@ class MealViewModel : ViewModel() {
 
     private fun loadSampleMeals() {
         _meals.value = listOf(
-            Meal(id = 1, name = "Avocado Toast", mealTime = "Breakfast", calories = 350, protein = 12, carbs = 35, fat = 18),
-            Meal(id = 2, name = "Chicken Salad", mealTime = "Lunch", calories = 450, protein = 35, carbs = 20, fat = 22),
-            Meal(id = 3, name = "Pasta", mealTime = "Dinner", calories = 600, protein = 20, carbs = 80, fat = 15)
+            Meal(id = 1, name = "Avocado Toast", mealTime = "Breakfast", calories = 350, protein = 12, carbs = 35, fat = 18, sodium = 300, fiber = 8),
+            Meal(id = 2, name = "Chicken Salad", mealTime = "Lunch", calories = 450, protein = 35, carbs = 20, fat = 22, sodium = 450, fiber = 5),
+            Meal(id = 3, name = "Pasta", mealTime = "Dinner", calories = 600, protein = 20, carbs = 80, fat = 15, sodium = 600, fiber = 6)
         )
         updateTodaysMeals()
         updateRecentMeals()

@@ -42,6 +42,8 @@ fun AddMealScreen(
     var protein by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
+    var sodium by remember { mutableStateOf("") }
+    var fiber by remember { mutableStateOf("") }
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var savedPhotoPath by remember { mutableStateOf<String?>(null) }
     var showError by remember { mutableStateOf(false) }
@@ -180,6 +182,7 @@ fun AddMealScreen(
             Text("Macros (Optional)", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
+            // First row: Protein, Carbs, Fat
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -210,6 +213,36 @@ fun AddMealScreen(
                     value = fat,
                     onValueChange = { fat = it },
                     label = { Text("Fat (g)") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Second row: Sodium, Fiber
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = sodium,
+                    onValueChange = { sodium = it },
+                    label = { Text("Sodium (mg)") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+
+                OutlinedTextField(
+                    value = fiber,
+                    onValueChange = { fiber = it },
+                    label = { Text("Fiber (g)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -308,6 +341,8 @@ fun AddMealScreen(
                             protein = protein.toIntOrNull(),
                             carbs = carbs.toIntOrNull(),
                             fat = fat.toIntOrNull(),
+                            sodium = sodium.toIntOrNull(),
+                            fiber = fiber.toIntOrNull(),
                             photoPath = savedPhotoPath,
                             timestamp = System.currentTimeMillis()
                         )

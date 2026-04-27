@@ -19,6 +19,15 @@ import com.mealnote.app.ui.viewmodels.MealViewModel
 import com.mealnote.app.ui.viewmodels.WaterViewModel
 import java.io.File
 
+// Conversion constant: 1 ml = 0.033814 oz
+const val ML_TO_OZ = 0.033814
+
+// Helper function to format oz display
+fun formatOz(ml: Int): String {
+    val oz = ml * ML_TO_OZ
+    return String.format("%.1f", oz)
+}
+
 @Composable
 fun HomeScreen(
     onNavigateToSettings: () -> Unit,
@@ -70,34 +79,51 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Display both ml and oz
                 Text(
-                    text = "$todayTotal / $dailyGoal ml",
-                    style = MaterialTheme.typography.headlineMedium
+                    text = "$todayTotal ml (${formatOz(todayTotal)} oz) / $dailyGoal ml (${formatOz(dailyGoal)} oz)",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontSize = 18.sp
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Water buttons
+                // Water buttons - NOW WITH FLUID OUNCES
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // 250ml / 8.5 oz button
                     Button(
                         onClick = { waterViewModel.addWater(250) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("+250ml")
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("+250 ml")
+                            Text("(${formatOz(250)} oz)", fontSize = 10.sp)
+                        }
                     }
+
+                    // 500ml / 16.9 oz button
                     Button(
                         onClick = { waterViewModel.addWater(500) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("+500ml")
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("+500 ml")
+                            Text("(${formatOz(500)} oz)", fontSize = 10.sp)
+                        }
                     }
+
+                    // 750ml / 25.4 oz button
                     Button(
                         onClick = { waterViewModel.addWater(750) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("+750ml")
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("+750 ml")
+                            Text("(${formatOz(750)} oz)", fontSize = 10.sp)
+                        }
                     }
                 }
 
@@ -132,7 +158,6 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Show meals (up to 3)
                 if (todaysMeals.isEmpty()) {
                     Text(
                         "No meals logged today. Tap + Add Meal",
@@ -150,7 +175,7 @@ fun HomeScreen(
                     }
                 }
 
-                // ===== ALWAYS SHOW "VIEW ALL" BUTTON =====
+                // Always show "View All" button
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
@@ -195,6 +220,7 @@ fun HomeScreen(
     }
 }
 
+// MealListItem remains the same
 @Composable
 fun MealListItem(
     meal: com.mealnote.app.ui.viewmodels.Meal,
@@ -213,7 +239,7 @@ fun MealListItem(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image display
+            // Image display using AsyncImage
             if (meal.photoPath != null) {
                 AsyncImage(
                     model = File(meal.photoPath),
@@ -224,6 +250,7 @@ fun MealListItem(
                     contentScale = ContentScale.Crop
                 )
             } else {
+                // Placeholder when no image
                 Box(
                     modifier = Modifier
                         .size(50.dp)
@@ -236,7 +263,7 @@ fun MealListItem(
             }
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Meal details with macros
+            // Meal details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -245,17 +272,13 @@ fun MealListItem(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )
-
-                // Calories line
                 Text(
                     text = "${meal.mealTime} • ${meal.calories?.toString() ?: "No"} cal",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                // Macros line (if any macros exist)
+                // Show macros if available
                 if (meal.protein != null || meal.carbs != null || meal.fat != null) {
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = buildMacrosString(meal),
                         style = MaterialTheme.typography.bodySmall,
@@ -289,5 +312,7 @@ fun buildMacrosString(meal: com.mealnote.app.ui.viewmodels.Meal): String {
     meal.protein?.let { parts.add("P:${it}g") }
     meal.carbs?.let { parts.add("C:${it}g") }
     meal.fat?.let { parts.add("F:${it}g") }
+    meal.sodium?.let { parts.add("Na:${it}mg") }
+    meal.fiber?.let { parts.add("Fib:${it}g") }
     return parts.joinToString(" • ")
 }

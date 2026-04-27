@@ -20,6 +20,7 @@ import com.mealnote.app.ui.viewmodels.MealViewModel
 import com.mealnote.app.ui.viewmodels.SettingsViewModel
 import com.mealnote.app.ui.viewmodels.WaterViewModel
 import com.mealnote.app.ui.screens.AllMealsScreen
+import com.mealnote.app.ui.screens.GraphsScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -83,10 +84,19 @@ fun MealNoteApp(
                 mealViewModel = mealViewModel  // ← Pass the existing ViewModel
             )
         }
+        // In your NavHost, add this composable
+        composable("graphs") {
+            GraphsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                mealViewModel = mealViewModel,
+                waterViewModel = waterViewModel
+            )
+        }
         composable("stats") {
             StatisticsScreen(
                 onNavigateToHome = { navController.popBackStack() },
                 onNavigateToSettings = { navController.navigate("settings") },
+                onNavigateToGraphs = { navController.navigate("graphs") },
                 waterViewModel = waterViewModel,  // ← Pass WaterViewModel
                 mealViewModel = mealViewModel      // ← Pass MealViewModel
             )
