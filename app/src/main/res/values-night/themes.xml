@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme -->
+    <style name="Theme.MealNote" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#90CAF9</item>
+        <item name="colorPrimaryDark">#64B5F6</item>
+        <item name="colorAccent">#FF8A65</item>
+        <item name="android:windowBackground">#121212</item>
+    </style>
+</resources>

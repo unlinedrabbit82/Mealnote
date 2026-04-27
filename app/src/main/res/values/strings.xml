@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Meal note</string>
+    <string name="daily_water_goal">💧 Daily Water Goal</string>
+    <string name="_2500_ml">2500 ml</string>
+    <string name="_0_ml_4000_ml">0 ml 4000 ml</string>
+    <string name="reminders">⏰ Reminders</string>
+    <string name="water_reminders">Water Reminders</string>
+    <string name="theme">🎨 Theme</string>
+    <string name="meal_reminders">Meal Reminders</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="about">ℹ️ About</string>
+    <string name="mealnote_v1_0_0">MealNote v1.0.0</string>
+    <string name="hydration_and_meal_tracking_app_with_ai_recognition">Hydration and Meal Tracking App with AI Recognition</string>
+    <string name="meal_name">Meal Name</string>
+    <string name="lunch">☀️ Lunch</string>
+    <string name="snack">🍎 Snack</string>
+    <string name="dinner">🌙 Dinner</string>
+    <string name="breakfast">🌅 Breakfast</string>
+    <string name="meal_photo_optional">Meal Photo (Optional)</string>
+    <string name="choose_from_gallery">🖼️ Choose from Gallery</string>
+    <string name="calories_optional">Calories (Optional)</string>
+    <string name="take_photo">📸 Take Photo</string>
+    <string name="notes_optional">Notes (Optional)</string>
+    <string name="save_meal">Save Meal</string>
+    <string name="inserted_image">Inserted Image</string>
+    <string name="mealnote">MealNote</string>
+</resources>
