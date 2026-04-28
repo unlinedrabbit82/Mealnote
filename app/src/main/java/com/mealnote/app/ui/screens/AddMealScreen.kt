@@ -23,8 +23,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.lifecycleScope
 import com.mealnote.app.ui.viewmodels.Meal
 import com.mealnote.app.ui.viewmodels.MealViewModel
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.label.ImageLabeling
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -48,9 +56,33 @@ fun AddMealScreen(
     var savedPhotoPath by remember { mutableStateOf<String?>(null) }
     var showError by remember { mutableStateOf(false) }
     var tempPhotoFile by remember { mutableStateOf<File?>(null) }
+    var isAnalyzingImage by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val lifecycleScope = rememberCoroutineScope()
     val mealTimes = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+
+    // ===== ML KIT: Suggest meal name from bitmap =====
+    suspend fun suggestMealName(bitmap: Bitmap): String? {
+        return suspendCancellableCoroutine { continuation ->
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
+
+            labeler.process(image)
+                .addOnSuccessListener { labels ->
+                    val topLabel = labels.maxByOrNull { it.confidence }
+                    val suggestedName = topLabel?.text?.capitalize()
+                    android.util.Log.d("MLKit", "Suggested meal: $suggestedName (confidence: ${topLabel?.confidence})")
+                    continuation.resume(suggestedName)
+                    labeler.close()
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("MLKit", "Error analyzing image: ${e.message}")
+                    continuation.resumeWithException(e)
+                    labeler.close()
+                }
+        }
+    }
 
     // Function to save bitmap to file
     fun saveBitmapToFile(bitmap: Bitmap): String? {
@@ -73,7 +105,28 @@ fun AddMealScreen(
         }
     }
 
-    // Camera launcher with permanent storage
+    // Function to process photo and suggest meal name
+    fun processPhotoAndSuggestName(bitmap: Bitmap, photoPath: String?) {
+        photoBitmap = bitmap
+        savedPhotoPath = photoPath
+        isAnalyzingImage = true
+
+        lifecycleScope.launch {
+            try {
+                val suggestedName = suggestMealName(bitmap)
+                isAnalyzingImage = false
+                if (!suggestedName.isNullOrBlank()) {
+                    mealName = suggestedName
+                    android.util.Log.d("AddMeal", "Auto-filled meal name: $suggestedName")
+                }
+            } catch (e: Exception) {
+                isAnalyzingImage = false
+                android.util.Log.e("AddMeal", "ML Kit failed: ${e.message}")
+            }
+        }
+    }
+
+    // Camera launcher with permanent storage and AI suggestion
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -82,9 +135,8 @@ fun AddMealScreen(
                 if (file.exists()) {
                     val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                     bitmap?.let {
-                        photoBitmap = it
-                        savedPhotoPath = saveBitmapToFile(it)
-                        android.util.Log.d("AddMeal", "Camera photo saved to: $savedPhotoPath")
+                        val photoPath = saveBitmapToFile(it)
+                        processPhotoAndSuggestName(it, photoPath)
                     }
                     file.delete()
                 }
@@ -92,16 +144,17 @@ fun AddMealScreen(
         }
     }
 
-    // Gallery launcher
+    // Gallery launcher with AI suggestion
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
             context.contentResolver.openInputStream(it)?.use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
-                photoBitmap = bitmap
-                savedPhotoPath = saveBitmapToFile(bitmap)
-                android.util.Log.d("AddMeal", "Gallery photo saved to: $savedPhotoPath")
+                bitmap?.let {
+                    val photoPath = saveBitmapToFile(it)
+                    processPhotoAndSuggestName(it, photoPath)
+                }
             }
         }
     }
@@ -135,14 +188,32 @@ fun AddMealScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Meal Name
+            // Meal Name with AI suggestion indicator
             OutlinedTextField(
                 value = mealName,
                 onValueChange = { mealName = it },
-                label = { Text("Meal Name") },
+                label = {
+                    Text(if (isAnalyzingImage) "🔍 Analyzing image..." else "Meal Name")
+                },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                trailingIcon = {
+                    if (isAnalyzingImage) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    }
+                }
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // AI suggestion hint
+            if (!isAnalyzingImage && mealName.isNotBlank()) {
+                Text(
+                    text = "✨ AI suggested this name from your photo",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -255,6 +326,7 @@ fun AddMealScreen(
 
             // Photo Section
             Text("Meal Photo (Optional)", style = MaterialTheme.typography.titleMedium)
+            Text("AI will suggest meal name from photo", style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
@@ -306,6 +378,7 @@ fun AddMealScreen(
                         onClick = {
                             photoBitmap = null
                             savedPhotoPath = null
+                            mealName = ""
                         },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
