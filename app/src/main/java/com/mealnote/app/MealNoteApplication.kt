@@ -13,9 +13,6 @@ class MealNoteApplication : Application() {
 
         private lateinit var instance: MealNoteApplication
 
-        fun getInstance(): MealNoteApplication {
-            return instance
-        }
     }
 
     override fun onCreate() {

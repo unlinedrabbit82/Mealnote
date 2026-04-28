@@ -1,11 +1,11 @@
 package com.mealnote.app.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +20,7 @@ import com.mealnote.app.ui.viewmodels.WaterViewModel
 import java.io.File
 
 const val ML_TO_OZ = 0.033814
+@SuppressLint("DefaultLocale")
 fun formatOz(ml: Int): String = String.format("%.1f", ml * ML_TO_OZ)
 
 @Composable

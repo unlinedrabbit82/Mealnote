@@ -1,13 +1,18 @@
 package com.mealnote.app.domain.utils
 
+import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.*
 
 object DateUtils {
 
+    @SuppressLint("ConstantLocale")
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    @SuppressLint("ConstantLocale")
     private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    @SuppressLint("ConstantLocale")
     private val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+    @SuppressLint("ConstantLocale")
     private val fullDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     fun formatDate(date: Date): String {

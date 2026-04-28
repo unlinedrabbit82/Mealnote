@@ -1,5 +1,6 @@
 package com.mealnote.app.notifications
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -61,6 +62,8 @@ class ReminderPreferenceFragment : Fragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("SetTextI18n")
     private fun loadSettings() {
         lifecycleScope.launch {
             try {
@@ -79,6 +82,7 @@ class ReminderPreferenceFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun setupClickListeners() {
         binding.waterReminderSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -133,7 +137,7 @@ class ReminderPreferenceFragment : Fragment() {
                             reminderScheduler.scheduleWaterReminders(settings)
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Handle error silently
                 }
             }
@@ -184,6 +188,8 @@ class ReminderPreferenceFragment : Fragment() {
         picker.show(parentFragmentManager, "time_picker")
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("SetTextI18n")
     private fun updateMealTimesList(times: List<String>) {
         binding.mealTimesContainer.removeAllViews()
 
