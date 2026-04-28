@@ -26,7 +26,10 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 60.dp,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Back button row
@@ -111,7 +114,17 @@ fun SettingsScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
+        TextButton(
+            onClick = {
+                val intent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://gist.github.com/unlinedrabbit82/44b560fd2afc2870849506b01f229bc7")
+                )
+                context.startActivity(intent)
+            }
+        ) {
+            Text("Privacy Policy")
+        }
         // ===== NEW: TEST NOTIFICATIONS CARD =====
         Card(
             modifier = Modifier.fillMaxWidth(),
