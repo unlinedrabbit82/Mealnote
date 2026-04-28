@@ -19,14 +19,8 @@ import com.mealnote.app.ui.viewmodels.MealViewModel
 import com.mealnote.app.ui.viewmodels.WaterViewModel
 import java.io.File
 
-// Conversion constant: 1 ml = 0.033814 oz
 const val ML_TO_OZ = 0.033814
-
-// Helper function to format oz display
-fun formatOz(ml: Int): String {
-    val oz = ml * ML_TO_OZ
-    return String.format("%.1f", oz)
-}
+fun formatOz(ml: Int): String = String.format("%.1f", ml * ML_TO_OZ)
 
 @Composable
 fun HomeScreen(
@@ -41,13 +35,6 @@ fun HomeScreen(
     val dailyGoal by waterViewModel.dailyGoal.collectAsState()
     val todaysMeals by mealViewModel.todaysMeals.collectAsState()
     val allMeals by mealViewModel.meals.collectAsState()
-
-    // Debug logging
-    LaunchedEffect(todayTotal, dailyGoal, todaysMeals) {
-        android.util.Log.d("HomeScreen", "Water: $todayTotal / $dailyGoal ml")
-        android.util.Log.d("HomeScreen", "Today's meals: ${todaysMeals.size}")
-        android.util.Log.d("HomeScreen", "Total meals: ${allMeals.size}")
-    }
 
     Column(
         modifier = Modifier
@@ -71,7 +58,6 @@ fun HomeScreen(
                 Text("💧 Today's Water", style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Progress bar
                 LinearProgressIndicator(
                     progress = (todayTotal.toFloat() / dailyGoal).coerceIn(0f, 1f),
                     modifier = Modifier.fillMaxWidth()
@@ -79,7 +65,6 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Display both ml and oz
                 Text(
                     text = "$todayTotal ml (${formatOz(todayTotal)} oz) / $dailyGoal ml (${formatOz(dailyGoal)} oz)",
                     style = MaterialTheme.typography.headlineMedium,
@@ -88,15 +73,13 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Water buttons - NOW WITH FLUID OUNCES
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 250ml / 8.5 oz button
                     Button(
                         onClick = { waterViewModel.addWater(250) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp)  // ← Added height
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("+250 ml")
@@ -104,10 +87,9 @@ fun HomeScreen(
                         }
                     }
 
-                    // 500ml / 16.9 oz button
                     Button(
                         onClick = { waterViewModel.addWater(500) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp)  // ← Added height
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("+500 ml")
@@ -115,10 +97,9 @@ fun HomeScreen(
                         }
                     }
 
-                    // 750ml / 25.4 oz button
                     Button(
                         onClick = { waterViewModel.addWater(750) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp)  // ← Added height
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("+750 ml")
@@ -127,7 +108,6 @@ fun HomeScreen(
                     }
                 }
 
-                // Reset button (for testing)
                 TextButton(
                     onClick = { waterViewModel.resetDailyTotal() },
                     modifier = Modifier.fillMaxWidth()
@@ -169,18 +149,16 @@ fun HomeScreen(
                             meal = meal,
                             onDelete = {
                                 mealViewModel.deleteMeal(meal.id)
-                                android.util.Log.d("HomeScreen", "Deleted meal: ${meal.name}")
                             }
                         )
                     }
                 }
 
-                // Always show "View All" button
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
                     onClick = onNavigateToAllMeals,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),  // ← Added height
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -194,27 +172,51 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // ===== NAVIGATION BUTTONS =====
+        // Horizontal row for 3 buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)  // ← Increased spacing
         ) {
             Button(
                 onClick = onNavigateToStats,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)  // ← Added height
+                    .padding(horizontal = 4.dp),  // ← Inner padding
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
-                Text("📊 Statistics")
+                Text("📊 Stats", fontSize = 14.sp)
             }
+
             Button(
                 onClick = onNavigateToAddMeal,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)  // ← Added height
+                    .padding(horizontal = 4.dp),  // ← Inner padding
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text("➕ Add Meal")
+                Text("➕ Meal", fontSize = 14.sp)
             }
+
             Button(
                 onClick = onNavigateToSettings,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)  // ← Added height
+                    .padding(horizontal = 4.dp),  // ← Inner padding
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
-                Text("⚙️ Settings")
+                Text("⚙️ Settings", fontSize = 14.sp)
             }
         }
     }
@@ -239,7 +241,6 @@ fun MealListItem(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image display using AsyncImage
             if (meal.photoPath != null) {
                 AsyncImage(
                     model = File(meal.photoPath),
@@ -250,7 +251,6 @@ fun MealListItem(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // Placeholder when no image
                 Box(
                     modifier = Modifier
                         .size(50.dp)
@@ -263,7 +263,6 @@ fun MealListItem(
             }
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Meal details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -277,7 +276,6 @@ fun MealListItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                // Show macros if available
                 if (meal.protein != null || meal.carbs != null || meal.fat != null) {
                     Text(
                         text = buildMacrosString(meal),
@@ -287,7 +285,6 @@ fun MealListItem(
                 }
             }
 
-            // Time
             Text(
                 text = java.text.SimpleDateFormat("h:mm a", java.util.Locale.US)
                     .format(java.util.Date(meal.timestamp)),
@@ -295,7 +292,6 @@ fun MealListItem(
                 modifier = Modifier.padding(end = 8.dp)
             )
 
-            // Delete button
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier.size(40.dp)
@@ -306,7 +302,6 @@ fun MealListItem(
     }
 }
 
-// Helper function to format macros string
 fun buildMacrosString(meal: com.mealnote.app.ui.viewmodels.Meal): String {
     val parts = mutableListOf<String>()
     meal.protein?.let { parts.add("P:${it}g") }
