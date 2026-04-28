@@ -28,8 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsViewModel = SettingsViewModel()
-        val waterViewModel = WaterViewModel(applicationContext)
-        // Initialize MealViewModel with init() method
+        val waterViewModel = WaterViewModel(applicationContext)  // ← Pass context
         val mealViewModel = MealViewModel().apply { init(applicationContext) }
 
         setContent {

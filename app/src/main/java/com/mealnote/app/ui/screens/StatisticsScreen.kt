@@ -13,19 +13,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mealnote.app.ui.viewmodels.MealViewModel
 import com.mealnote.app.ui.viewmodels.WaterViewModel
-import java.util.Calendar
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToGraphs: () -> Unit,  // ← Add this
+    onNavigateToGraphs: () -> Unit,
     waterViewModel: WaterViewModel,
     mealViewModel: MealViewModel
 ) {
     val todayTotal by waterViewModel.todayTotal.collectAsState()
     val dailyGoal by waterViewModel.dailyGoal.collectAsState()
+    val lifetimeTotal by waterViewModel.lifetimeTotal.collectAsState()
+    val lifetimeOz by waterViewModel.lifetimeOz.collectAsState()
+    val lifetimeBottles by waterViewModel.lifetimeBottles.collectAsState()
     val allMeals by mealViewModel.meals.collectAsState()
 
     // Get today's timestamp (start of day)
@@ -41,7 +44,7 @@ fun StatisticsScreen(
     // Filter meals for today
     val todaysMeals = allMeals.filter { it.timestamp >= todayStart }
 
-    // ===== TODAY'S MACROS =====
+    // Today's macros
     val todaysCalories = todaysMeals.mapNotNull { it.calories }.sum()
     val todaysProtein = todaysMeals.mapNotNull { it.protein }.sum()
     val todaysCarbs = todaysMeals.mapNotNull { it.carbs }.sum()
@@ -49,7 +52,7 @@ fun StatisticsScreen(
     val todaysSodium = todaysMeals.mapNotNull { it.sodium }.sum()
     val todaysFiber = todaysMeals.mapNotNull { it.fiber }.sum()
 
-    // ===== ALL-TIME MACROS =====
+    // All-time macros
     val totalMeals = allMeals.size
     val totalCalories = allMeals.mapNotNull { it.calories }.sum()
     val totalProtein = allMeals.mapNotNull { it.protein }.sum()
@@ -58,17 +61,20 @@ fun StatisticsScreen(
     val totalSodium = allMeals.mapNotNull { it.sodium }.sum()
     val totalFiber = allMeals.mapNotNull { it.fiber }.sum()
 
+    // Bottle calculations
+    val todayBottles = todayTotal / 500.0
+    val goalBottles = dailyGoal / 500.0
+
     val avgCaloriesPerMeal = if (totalMeals > 0) {
         allMeals.mapNotNull { it.calories }.average().toInt()
     } else 0
 
-    // Group meals by type (all-time)
+    // Meal distribution
     val breakfastCount = allMeals.count { it.mealTime == "Breakfast" }
     val lunchCount = allMeals.count { it.mealTime == "Lunch" }
     val dinnerCount = allMeals.count { it.mealTime == "Dinner" }
     val snackCount = allMeals.count { it.mealTime == "Snack" }
 
-    // Today's meal counts
     val todaysBreakfast = todaysMeals.count { it.mealTime == "Breakfast" }
     val todaysLunch = todaysMeals.count { it.mealTime == "Lunch" }
     val todaysDinner = todaysMeals.count { it.mealTime == "Dinner" }
@@ -113,27 +119,104 @@ fun StatisticsScreen(
                     Text("💧 Water Intake", style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Today's Water
+                    Text("Today's Intake:", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Today's Water:")
-                        Text("$todayTotal / $dailyGoal ml", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        Text("📏 Metric:")
+                        Text("$todayTotal / $dailyGoal ml (${String.format("%.1f", todayTotal * 0.033814)} / ${String.format("%.1f", dailyGoal * 0.033814)} oz)",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("🍾 Bottles (500ml):")
+                        Text("${String.format("%.1f", todayBottles)} / ${String.format("%.1f", goalBottles)} bottles",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = Color(0xFF2196F3))
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     val percentage = (todayTotal.toFloat() / dailyGoal * 100).toInt()
+                    LinearProgressIndicator(
+                        progress = (todayTotal.toFloat() / dailyGoal).coerceIn(0f, 1f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     Text(
                         "Achieved: $percentage% of daily goal",
                         color = if (percentage >= 100) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+                    // ===== LIFETIME WATER - NOW FULLY IMPLEMENTED =====
+                    Text("🌟 Lifetime Totals", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("💧 Total Water Consumed:")
+                        Text("${lifetimeTotal} ml",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = Color(0xFF2196F3))
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("📏 In Ounces:")
+                        Text("${String.format("%.1f", lifetimeOz)} oz",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("🍾 In Bottles (500ml):")
+                        Text("${String.format("%.1f", lifetimeBottles)} bottles",
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = Color(0xFF4CAF50))
+                    }
+
+                    // Show number of days tracked
+                    val daysTracked = (lifetimeTotal / (todayTotal.coerceAtLeast(1))).coerceAtLeast(1)
+                    if (todayTotal > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("📅 Average Daily Intake:")
+                            Text("${lifetimeTotal / daysTracked} ml/day",
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ===== TODAY'S MACROS CARD (NEW) =====
+            // ===== TODAY'S MACROS CARD =====
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -148,7 +231,6 @@ fun StatisticsScreen(
                     Text("(Resets daily)", style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Today's Meals Count
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -159,7 +241,6 @@ fun StatisticsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Today's Calories
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -170,7 +251,6 @@ fun StatisticsScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Today's Macros
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -215,7 +295,6 @@ fun StatisticsScreen(
                         }
                     }
 
-                    // Today's Meal Distribution
                     if (todaysTotalMeals > 0) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Divider()
@@ -303,11 +382,7 @@ fun StatisticsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("💪 Protein:")
-                        Text(
-                            "${totalProtein}g",
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
-                        )
+                        Text("${totalProtein}g", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color(0xFF4CAF50))
                     }
 
                     Row(
@@ -315,11 +390,7 @@ fun StatisticsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("🌾 Carbs:")
-                        Text(
-                            "${totalCarbs}g",
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = Color(0xFFFF9800)
-                        )
+                        Text("${totalCarbs}g", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color(0xFFFF9800))
                     }
 
                     Row(
@@ -327,11 +398,7 @@ fun StatisticsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("🥑 Fat:")
-                        Text(
-                            "${totalFat}g",
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = Color(0xFF9C27B0)
-                        )
+                        Text("${totalFat}g", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color(0xFF9C27B0))
                     }
 
                     if (totalSodium > 0) {
@@ -340,11 +407,7 @@ fun StatisticsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("🧂 Sodium:")
-                            Text(
-                                "${totalSodium}mg",
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                color = Color(0xFF2196F3)
-                            )
+                            Text("${totalSodium}mg", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color(0xFF2196F3))
                         }
                     }
 
@@ -354,15 +417,10 @@ fun StatisticsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("🌿 Fiber:")
-                            Text(
-                                "${totalFiber}g",
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                color = Color(0xFF8BC34A)
-                            )
+                            Text("${totalFiber}g", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color(0xFF8BC34A))
                         }
                     }
 
-                    // Macro ratio (all-time)
                     val totalMacros = totalProtein + totalCarbs + totalFat
                     if (totalMacros > 0) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -409,7 +467,8 @@ fun StatisticsScreen(
                     }
                 }
             }
-            // Add after the Achievement Badge, before Navigation Buttons
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = onNavigateToGraphs,
@@ -420,9 +479,9 @@ fun StatisticsScreen(
             ) {
                 Text("📈 View Charts & Graphs")
             }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ===== NAVIGATION BUTTONS =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
