@@ -79,28 +79,51 @@
 ## 📁 Project Structure
 app/src/main/java/com/mealnote/app/
 ├── MainActivity.kt # Entry point with navigation
+
 ├── ui/
+
 │ ├── screens/ # Compose screens
+
 │ │ ├── HomeScreen.kt # Water tracking & recent meals
+
 │ │ ├── SettingsScreen.kt # User preferences
+
 │ │ ├── StatisticsScreen.kt # Stats and macros
+
 │ │ ├── AddMealScreen.kt # Meal entry with AI
+
 │ │ ├── AllMealsScreen.kt # Full meal history
+
 │ │ └── GraphsScreen.kt # Weekly charts
+
 │ ├── viewmodels/ # ViewModels (StateFlow)
+
 │ │ ├── WaterViewModel.kt
+
 │ │ ├── MealViewModel.kt
+
 │ │ └── SettingsViewModel.kt
+
 │ └── theme/ # Compose theme
+
 │ └── Theme.kt
+
 ├── data/
+
 │ └── repository/ # Data repositories
+
 │ ├── WaterRepository.kt
+
 │ ├── MealRepository.kt
+
 │ └── SettingsRepository.kt
+
 └── notifications/ # Reminder system
+
 ├── ReminderWorker.kt
+
 └── ReminderScheduler.kt
+
 ## 🚀 Getting Started
 
 ### Prerequisites
